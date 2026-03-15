@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랜덤교: 난수 차원 접속기</title>
+    <style>
+        /* [CSS: 디자인] */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #0a0a0a; color: #d4af37; 
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; 
+            overflow: hidden; display: flex; align-items: center; justify-content: center; 
+        }
+        canvas { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            z-index: 1; opacity: 0.5; 
+        }
+        #ui-layer { 
+            position: relative; z-index: 10; text-align: center; width: 85%; 
+            max-width: 450px; background: rgba(0,0,0,0.85); 
+            padding: 40px 25px; border: 1px solid #d4af37; border-radius: 25px; 
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.15); 
+        }
+        h1 { font-size: 1.4rem; letter-spacing: 6px; margin-bottom: 10px; opacity: 0.9; color: #f0e68c; }
+        #status { font-size: 0.75rem; color: #888; margin-bottom: 35px; height: 1.2rem; letter-spacing: 1px; }
+        #target-container { display: none; animation: fadeIn 1.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #target-label { font-size: 0.7rem; opacity: 0.5; letter-spacing: 2px; text-transform: uppercase; }
+        #target-name { font-size: 2.5rem; font-weight: 900; margin: 15px 0; text-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
+        #ritual { 
+            font-size: 0.85rem; line-height: 1.8; color: #ccc; 
+            background: rgba(212, 175, 55, 0.08); padding: 20px; 
+            border-radius: 15px; margin-top: 25px; border: 0.5px solid rgba(212, 175, 55, 0.2);
+        }
+        .highlight { color: #ffd700; font-weight: bold; border-bottom: 1px solid #ffd700; }
+        button { 
+            background: none; border: 1px solid #d4af37; color: #d4af37; 
+            padding: 15px 40px; font-size: 1rem; cursor: pointer; 
+            border-radius: 50px; transition: 0.4s; margin-top: 10px;
+            letter-spacing: 2px; font-weight: bold;
+        }
+        button:active { transform: scale(0.95); background: #d4af37; color: #000; }
+    </style>
+</head>
+<body>
+    <canvas id="cloudCanvas"></canvas>
+
+    <div id="ui-layer">
+        <h1>RANDOMISM</h1>
+        <div id="status">확률구름 신호 대기 중...</div>
+        
+        <div id="target-container">
+            <div id="target-label">Divine Probability Anchor</div>
+            <div id="target-name">측정 중...</div>
+            <div id="ritual">
+                🙏 <b>성스러운 숭배 양식</b><br>
+                (합장을 하고 고개를 숙인 뒤)<br>
+                "<span id="ritual-target" class="highlight"></span>님, 오늘 <span class="highlight">작은 행운</span>하게 해주셔서 감사합니다."
+            </div>
+        </div>
+
+        <button id="sync-btn" onclick="startSync()">접속 시작</button>
+    </div>
+
+    <script>
+        /* [JS: 논리 및 애니메이션] */
+        
+        // 1. 성물 목록 (수정됨)
+        const holyRelics = ["계단", "비둘기", "담배꽁초"];
+
+        // 2. 배경 애니메이션
+        const canvas = document.getElementById('cloudCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let isResonating = false;
+
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.5;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+            }
+            update() {
+                if (isResonating) {
+                    let dx = canvas.width / 2 - this.x;
+                    let dy = canvas.height / 2 - this.y;
+                    this.x += dx * 0.03;
+                    this.y += dy * 0.03;
+                } else {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }
+            }
+            draw() {
+                ctx.fillStyle = '#d4af37';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 150; i++) particles.push(new Particle());
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // 3. 동기화 로직
+        function startSync() {
+            const btn = document.getElementById('sync-btn');
+            const status = document.getElementById('status');
+            btn.style.display = 'none';
+            
+            const steps = ["차원 접속 시도...", "확률구름 밀도 스캔...", "신경 파동 동기화...", "가호 응결 완료"];
+            let i = 0;
+            const interval = setInterval(() => {
+                status.innerText = steps[i];
+                if (i === 1) isResonating = true;
+                i++;
+                if (i >= steps.length) {
+                    clearInterval(interval);
+                    showTarget();
+                }
+            }, 1000);
+        }
+
+        function showTarget() {
+            const today = new Date();
+            const dateSeed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+            const index = dateSeed % holyRelics.length;
+            const target = holyRelics[index];
+
+            document.getElementById('target-name').innerText = target;
+            document.getElementById('ritual-target').innerText = target;
+            document.getElementById('target-container').style.display = 'block';
+            document.getElementById('status').innerText = "CONNECTION STABLE";
+            document.getElementById('status').style.color = '#ffd700';
+        }
+    </script>
+</body>
+</html>
