@@ -44,6 +44,10 @@
     </style>
 </head>
 <body>
+    <audio id="sfx-audio" preload="auto">
+        <source src="847651__cvltiv8r__alien-monster-digital-scream" type="audio/mpeg">
+    </audio>
+
     <canvas id="cloudCanvas"></canvas>
 
     <div id="ui-layer">
@@ -66,7 +70,7 @@
     <script>
         /* [JS: 논리 및 애니메이션] */
         
-        // 1. 성물 목록 (수정됨)
+        // 1. 성물 목록
         const holyRelics = ["계단", "비둘기", "담배꽁초"];
 
         // 2. 배경 애니메이션
@@ -117,8 +121,12 @@
         }
         animate();
 
-        // 3. 동기화 로직
+        // 3. 동기화 로직 (접속 버튼 클릭 시 실행)
         function startSync() {
+            // 버튼을 누르는 순간 효과음 재생
+            const sfx = document.getElementById('sfx-audio');
+            sfx.play().catch(error => console.log("효과음 재생 오류:", error));
+
             const btn = document.getElementById('sync-btn');
             const status = document.getElementById('status');
             btn.style.display = 'none';
